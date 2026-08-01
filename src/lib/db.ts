@@ -3,7 +3,9 @@ let _sql: any = null;
 async function getSql() {
   if (!_sql) {
     const mod = await import("@vercel/postgres");
-    const client = mod.createClient();
+    const client = mod.createClient({
+      connectionString: process.env.POSTGRES_URL!,
+    });
     await client.connect();
     _sql = client.sql.bind(client);
   }
