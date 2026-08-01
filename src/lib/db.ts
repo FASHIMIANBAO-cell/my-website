@@ -186,7 +186,8 @@ export const post = {
     if (data.excerpt !== undefined) updates.push(`excerpt = '${data.excerpt.replace(/'/g, "''")}'`);
     if (data.published !== undefined) updates.push(`published = ${data.published ? 1 : 0}`);
     updates.push(`"updatedAt" = NOW()`);
-    await sql.query(`UPDATE Post SET ${updates.join(", ")} WHERE id = ${id}`);
+    const { query } = await getClient();
+    await query(`UPDATE Post SET ${updates.join(", ")} WHERE id = ${id}`);
     return post.findUnique({ id });
   },
   delete: async (where: { id: number }) => {
@@ -224,7 +225,8 @@ export const resource = {
       if (v !== undefined) updates.push(`"${k}" = '${(v as string).replace(/'/g, "''")}'`);
     }
     if (updates.length > 0) {
-      await sql.query(`UPDATE Resource SET ${updates.join(", ")} WHERE id = ${id}`);
+      const { query } = await getClient();
+      await query(`UPDATE Resource SET ${updates.join(", ")} WHERE id = ${id}`);
     }
     return resource.findUnique({ id });
   },
@@ -253,7 +255,8 @@ export const comment = {
     if (resourceId === null) q += ` WHERE c."resourceId" IS NULL`;
     else if (resourceId !== undefined) q += ` WHERE c."resourceId" = ${resourceId}`;
     q += ` ORDER BY c."createdAt" ASC LIMIT 200`;
-    const r = await sql.query(q);
+    const { query } = await getClient();
+    const r = await query(q);
     return r.rows as CommentRow[];
   },
   create: async (userId: number, content: string, parentId?: number | null, resourceId?: number | null) => {
