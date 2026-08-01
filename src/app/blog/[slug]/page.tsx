@@ -29,7 +29,7 @@ export default async function BlogPostPage({
             {postData.title}
           </h1>
           <div className="mt-10 text-white/65 leading-loose space-y-4">
-            {postData.content.split("\n").map((line, i) => {
+            {postData.content.split("\n").map((line: string, i: number) => {
               if (line.startsWith("## ")) {
                 return (
                   <h2
