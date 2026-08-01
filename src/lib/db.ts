@@ -1,15 +1,28 @@
-import { sql, createPool } from "@vercel/postgres";
+import type { VercelPool } from "@vercel/postgres";
 
-let _pool: ReturnType<typeof createPool> | null = null;
+let _pool: VercelPool | null = null;
+let _sql: any = null;
 
-function getPool() {
-  if (!_pool) _pool = createPool();
+async function getSql() {
+  if (!_sql) {
+    const mod = await import("@vercel/postgres");
+    _sql = mod.sql;
+  }
+  return _sql;
+}
+
+async function getPool() {
+  if (!_pool) {
+    const mod = await import("@vercel/postgres");
+    _pool = mod.createPool();
+  }
   return _pool;
 }
 
 // 初始化表
 async function initDB() {
-  await sql`
+  const s = await getSql();
+  await s`
     CREATE TABLE IF NOT EXISTS Admin (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS "User" (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, "displayName" TEXT NOT NULL DEFAULT '', email TEXT NOT NULL DEFAULT '', password TEXT NOT NULL, avatar TEXT NOT NULL DEFAULT '', "createdAt" TIMESTAMP DEFAULT NOW());
     CREATE TABLE IF NOT EXISTS Post (id SERIAL PRIMARY KEY, slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL DEFAULT '', excerpt TEXT NOT NULL DEFAULT '', published INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW());
@@ -30,12 +43,12 @@ export interface CommentRow { id: number; parentId: number | null; resourceId: n
 export const admin = {
   findUnique: async (where: { username: string }) => {
     await initDB();
-    const r = await sql`SELECT * FROM Admin WHERE username = ${where.username}`;
+    const r = await (await getSql())`SELECT * FROM Admin WHERE username = ${where.username}`;
     return r.rows[0] as AdminRow | undefined;
   },
   create: async (data: { username: string; password: string }) => {
     await initDB();
-    await sql`INSERT INTO Admin (username, password) VALUES (${data.username}, ${data.password})`;
+    await (await getSql())`INSERT INTO Admin (username, password) VALUES (${data.username}, ${data.password})`;
   },
 };
 
@@ -43,31 +56,31 @@ export const user = {
   findUnique: async (where: { username?: string; id?: number }) => {
     await initDB();
     if (where.username) {
-      const r = await sql`SELECT * FROM "User" WHERE username = ${where.username}`;
+      const r = await (await getSql())`SELECT * FROM "User" WHERE username = ${where.username}`;
       return r.rows[0] as UserRow | undefined;
     }
     if (where.id) {
-      const r = await sql`SELECT * FROM "User" WHERE id = ${where.id}`;
+      const r = await (await getSql())`SELECT * FROM "User" WHERE id = ${where.id}`;
       return r.rows[0] as UserRow | undefined;
     }
     return undefined;
   },
   create: async (data: { username: string; displayName?: string; email?: string; password: string }) => {
     await initDB();
-    await sql`INSERT INTO "User" (username, "displayName", email, password) VALUES (${data.username}, ${data.displayName || ""}, ${data.email || ""}, ${data.password})`;
+    await (await getSql())`INSERT INTO "User" (username, "displayName", email, password) VALUES (${data.username}, ${data.displayName || ""}, ${data.email || ""}, ${data.password})`;
   },
   list: async () => {
     await initDB();
-    const r = await sql`SELECT id, username, "displayName", avatar, "createdAt" FROM "User" ORDER BY "createdAt" DESC`;
+    const r = await (await getSql())`SELECT id, username, "displayName", avatar, "createdAt" FROM "User" ORDER BY "createdAt" DESC`;
     return r.rows;
   },
   delete: async (id: number) => {
     await initDB();
-    await sql`DELETE FROM "User" WHERE id = ${id}`;
+    await (await getSql())`DELETE FROM "User" WHERE id = ${id}`;
   },
   updateAvatar: async (username: string, avatar: string) => {
     await initDB();
-    await sql`UPDATE "User" SET avatar = ${avatar} WHERE username = ${username}`;
+    await (await getSql())`UPDATE "User" SET avatar = ${avatar} WHERE username = ${username}`;
   },
 };
 
@@ -76,24 +89,24 @@ export const post = {
     await initDB();
     let r;
     if (opts?.where?.published) {
-      r = await sql`SELECT * FROM Post WHERE published = 1 ORDER BY "createdAt" DESC`;
+      r = await (await getSql())`SELECT * FROM Post WHERE published = 1 ORDER BY "createdAt" DESC`;
     } else {
-      r = await sql`SELECT * FROM Post ORDER BY "createdAt" DESC`;
+      r = await (await getSql())`SELECT * FROM Post ORDER BY "createdAt" DESC`;
     }
     return r.rows.map((p: any) => ({ ...p, published: !!p.published }));
   },
   findUnique: async (where: { slug?: string; id?: number }) => {
     await initDB();
     let r;
-    if (where.slug) r = await sql`SELECT * FROM Post WHERE slug = ${where.slug}`;
-    else if (where.id) r = await sql`SELECT * FROM Post WHERE id = ${where.id}`;
+    if (where.slug) r = await (await getSql())`SELECT * FROM Post WHERE slug = ${where.slug}`;
+    else if (where.id) r = await (await getSql())`SELECT * FROM Post WHERE id = ${where.id}`;
     else return null;
     if (!r.rows[0]) return null;
     return { ...r.rows[0] as any, published: !!(r.rows[0] as any).published };
   },
   create: async (data: { slug: string; title: string; content?: string; excerpt?: string; published?: boolean }) => {
     await initDB();
-    const r = await sql`INSERT INTO Post (slug, title, content, excerpt, published) VALUES (${data.slug}, ${data.title}, ${data.content || ""}, ${data.excerpt || ""}, ${data.published ? 1 : 0}) RETURNING id`;
+    const r = await (await getSql())`INSERT INTO Post (slug, title, content, excerpt, published) VALUES (${data.slug}, ${data.title}, ${data.content || ""}, ${data.excerpt || ""}, ${data.published ? 1 : 0}) RETURNING id`;
     return post.findUnique({ id: r.rows[0].id });
   },
   update: async (id: number, data: Partial<{ slug: string; title: string; content: string; excerpt: string; published: boolean }>) => {
@@ -110,24 +123,24 @@ export const post = {
   },
   delete: async (id: number) => {
     await initDB();
-    await sql`DELETE FROM Post WHERE id = ${id}`;
+    await (await getSql())`DELETE FROM Post WHERE id = ${id}`;
   },
 };
 
 export const resource = {
   findMany: async () => {
     await initDB();
-    const r = await sql`SELECT * FROM Resource ORDER BY "createdAt" DESC`;
+    const r = await (await getSql())`SELECT * FROM Resource ORDER BY "createdAt" DESC`;
     return r.rows as ResourceRow[];
   },
   findUnique: async (where: { id: number }) => {
     await initDB();
-    const r = await sql`SELECT * FROM Resource WHERE id = ${where.id}`;
+    const r = await (await getSql())`SELECT * FROM Resource WHERE id = ${where.id}`;
     return r.rows[0] as ResourceRow | undefined;
   },
   create: async (data: { name: string; description?: string; category?: string; image?: string; downloadLinks?: string }) => {
     await initDB();
-    const r = await sql`INSERT INTO Resource (name, description, category, image, "downloadLinks") VALUES (${data.name}, ${data.description || ""}, ${data.category || ""}, ${data.image || ""}, ${data.downloadLinks || "[]"}) RETURNING id`;
+    const r = await (await getSql())`INSERT INTO Resource (name, description, category, image, "downloadLinks") VALUES (${data.name}, ${data.description || ""}, ${data.category || ""}, ${data.image || ""}, ${data.downloadLinks || "[]"}) RETURNING id`;
     return resource.findUnique({ id: r.rows[0].id });
   },
   update: async (id: number, data: Partial<{ name: string; description: string; category: string; image: string; downloadLinks: string }>) => {
@@ -141,11 +154,11 @@ export const resource = {
   },
   incrementDownloads: async (id: number) => {
     await initDB();
-    await sql`UPDATE Resource SET downloads = downloads + 1 WHERE id = ${id}`;
+    await (await getSql())`UPDATE Resource SET downloads = downloads + 1 WHERE id = ${id}`;
   },
   delete: async (id: number) => {
     await initDB();
-    await sql`DELETE FROM Resource WHERE id = ${id}`;
+    await (await getSql())`DELETE FROM Resource WHERE id = ${id}`;
   },
 };
 
@@ -165,38 +178,38 @@ export const comment = {
   },
   create: async (userId: number, content: string, parentId?: number | null, resourceId?: number | null) => {
     await initDB();
-    await sql`INSERT INTO Comment ("userId", content, "parentId", "resourceId") VALUES (${userId}, ${content}, ${parentId || null}, ${resourceId || null})`;
+    await (await getSql())`INSERT INTO Comment ("userId", content, "parentId", "resourceId") VALUES (${userId}, ${content}, ${parentId || null}, ${resourceId || null})`;
   },
   delete: async (id: number) => {
     await initDB();
-    await sql`DELETE FROM Comment WHERE id = ${id}`;
+    await (await getSql())`DELETE FROM Comment WHERE id = ${id}`;
   },
 };
 
 export const favorite = {
   findByUser: async (userId: number) => {
     await initDB();
-    const r = await sql`SELECT p.id, p.slug, p.title, p.excerpt, p."createdAt", f."createdAt" as "favAt" FROM Favorite f JOIN Post p ON f."postId" = p.id WHERE f."userId" = ${userId} ORDER BY f."createdAt" DESC`;
+    const r = await (await getSql())`SELECT p.id, p.slug, p.title, p.excerpt, p."createdAt", f."createdAt" as "favAt" FROM Favorite f JOIN Post p ON f."postId" = p.id WHERE f."userId" = ${userId} ORDER BY f."createdAt" DESC`;
     return r.rows;
   },
   add: async (userId: number, postId: number) => {
     await initDB();
-    await sql`INSERT INTO Favorite ("userId", "postId") VALUES (${userId}, ${postId}) ON CONFLICT DO NOTHING`;
+    await (await getSql())`INSERT INTO Favorite ("userId", "postId") VALUES (${userId}, ${postId}) ON CONFLICT DO NOTHING`;
   },
   remove: async (userId: number, postId: number) => {
     await initDB();
-    await sql`DELETE FROM Favorite WHERE "userId" = ${userId} AND "postId" = ${postId}`;
+    await (await getSql())`DELETE FROM Favorite WHERE "userId" = ${userId} AND "postId" = ${postId}`;
   },
 };
 
 export const setting = {
   get: async (key: string) => {
     await initDB();
-    const r = await sql`SELECT value FROM Setting WHERE key = ${key}`;
+    const r = await (await getSql())`SELECT value FROM Setting WHERE key = ${key}`;
     return r.rows[0]?.value || "";
   },
   set: async (key: string, value: string) => {
     await initDB();
-    await sql`INSERT INTO Setting (key, value) VALUES (${key}, ${value}) ON CONFLICT (key) DO UPDATE SET value = ${value}`;
+    await (await getSql())`INSERT INTO Setting (key, value) VALUES (${key}, ${value}) ON CONFLICT (key) DO UPDATE SET value = ${value}`;
   },
 };
