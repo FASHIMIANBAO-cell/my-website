@@ -15,7 +15,7 @@ export default async function BlogPage() {
             文档
           </h1>
           <div className="grid gap-4">
-            {posts.map((post) => (
+            {posts.map((post: any) => (
               <BlogCard
                 key={post.id}
                 title={post.title}
