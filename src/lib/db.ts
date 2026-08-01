@@ -155,10 +155,10 @@ export const post = {
     const { sql } = await getClient();
     if (opts?.where?.published) {
       const r = await sql`SELECT * FROM Post WHERE published = 1 ORDER BY "createdAt" DESC`;
-      return r.rows.map((p: PostRow) => ({ ...p, published: !!p.published }));
+      return r.rows.map((p: any) => ({ ...p, published: !!p.published }));
     }
     const r = await sql`SELECT * FROM Post ORDER BY "createdAt" DESC`;
-    return r.rows.map((p: PostRow) => ({ ...p, published: !!p.published }));
+    return r.rows.map((p: any) => ({ ...p, published: !!p.published }));
   },
   findUnique: async (where: { slug?: string; id?: number }) => {
     await initDB();
