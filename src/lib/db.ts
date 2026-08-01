@@ -1,6 +1,7 @@
-import { sql as pgSql } from "@vercel/postgres";
+import { sql, createPool } from "@vercel/postgres";
 
-const s = pgSql;
+const pool = createPool();
+const s = sql;
 
 // 初始化表
 async function initDB() {
@@ -100,7 +101,7 @@ export const post = {
     if (data.excerpt !== undefined) parts.push(`excerpt = '${data.excerpt.replace(/'/g, "''")}'`);
     if (data.published !== undefined) parts.push(`published = ${data.published ? 1 : 0}`);
     parts.push(`"updatedAt" = NOW()`);
-    await s.unsafe(`UPDATE Post SET ${parts.join(", ")} WHERE id = ${id}`);
+    const r = await pool.query(`UPDATE Post SET ${parts.join(", ")} WHERE id = ${id}`);
     return post.findUnique({ id });
   },
   delete: async (id: number) => {
@@ -131,7 +132,7 @@ export const resource = {
     for (const [k, v] of Object.entries(data)) {
       if (v !== undefined) parts.push(`"${k}" = '${(v as string).replace(/'/g, "''")}'`);
     }
-    if (parts.length > 0) await s.unsafe(`UPDATE Resource SET ${parts.join(", ")} WHERE id = ${id}`);
+    if (parts.length > 0) const r = await pool.query(`UPDATE Resource SET ${parts.join(", ")} WHERE id = ${id}`);
     return resource.findUnique({ id });
   },
   incrementDownloads: async (id: number) => {
