@@ -118,7 +118,7 @@ export const post = {
     if (data.excerpt !== undefined) parts.push(`excerpt = '${data.excerpt.replace(/'/g, "''")}'`);
     if (data.published !== undefined) parts.push(`published = ${data.published ? 1 : 0}`);
     parts.push(`"updatedAt" = NOW()`);
-    const r = await getPool().query(`UPDATE Post SET ${parts.join(", ")} WHERE id = ${id}`);
+    const r = (await getPool()).query(`UPDATE Post SET ${parts.join(", ")} WHERE id = ${id}`);
     return post.findUnique({ id });
   },
   delete: async (id: number) => {
@@ -149,7 +149,7 @@ export const resource = {
     for (const [k, v] of Object.entries(data)) {
       if (v !== undefined) parts.push(`"${k}" = '${(v as string).replace(/'/g, "''")}'`);
     }
-    if (parts.length > 0) { await getPool().query(`UPDATE Resource SET ${parts.join(", ")} WHERE id = ${id}`); }
+    if (parts.length > 0) { (await getPool()).query(`UPDATE Resource SET ${parts.join(", ")} WHERE id = ${id}`); }
     return resource.findUnique({ id });
   },
   incrementDownloads: async (id: number) => {
@@ -173,7 +173,7 @@ export const comment = {
     if (resourceId === null) q += ` WHERE c."resourceId" IS NULL`;
     else if (resourceId !== undefined) q += ` WHERE c."resourceId" = ${resourceId}`;
     q += ` ORDER BY c."createdAt" ASC LIMIT 200`;
-    const r = await getPool().query(q);
+    const r = (await getPool()).query(q);
     return r.rows as CommentRow[];
   },
   create: async (userId: number, content: string, parentId?: number | null, resourceId?: number | null) => {
