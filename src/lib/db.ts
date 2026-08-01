@@ -132,7 +132,7 @@ export const resource = {
     for (const [k, v] of Object.entries(data)) {
       if (v !== undefined) parts.push(`"${k}" = '${(v as string).replace(/'/g, "''")}'`);
     }
-    if (parts.length > 0) const r = await pool.query(`UPDATE Resource SET ${parts.join(", ")} WHERE id = ${id}`);
+    if (parts.length > 0) { await pool.query(`UPDATE Resource SET ${parts.join(", ")} WHERE id = ${id}`); }
     return resource.findUnique({ id });
   },
   incrementDownloads: async (id: number) => {
