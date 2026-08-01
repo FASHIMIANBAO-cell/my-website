@@ -25,6 +25,6 @@ export async function DELETE(
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const { id } = await params;
-  await post.delete({ id: parseInt(id) });
+  await post.delete(parseInt(id));
   return NextResponse.json({ ok: true });
 }
