@@ -1,65 +1,89 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { useState } from "react";
+import { LoginPanel } from "@/components/login-panel";
+import { RegisterPanel } from "@/components/register-panel";
+import { useUser } from "@/components/user-provider";
+
+function HomeContent() {
+  const { username, displayName, avatar, loading } = useUser();
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [registerOpen, setRegisterOpen] = useState(false);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <>
+      <div className="flex min-h-screen flex-col items-center justify-center px-4">
+        {/* 右上角 */}
+        <div className="fixed top-5 right-5 z-20">
+          {loading ? null : username ? (
+            <Link href="/profile" className="flex flex-col items-center gap-1.5">
+              {avatar ? (
+                <img src={avatar} alt="" className="h-9 w-9 rounded-full object-cover ring-1 ring-white/20" />
+              ) : (
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-sm ring-1 ring-white/20"
+                  style={{ background: "rgba(168,216,234,0.25)", color: "rgba(255,255,255,0.8)" }}
+                >
+                  {username[0]?.toUpperCase()}
+                </div>
+              )}
+              <span className="text-xs text-white/50">{displayName || username}</span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => setLoginOpen(true)}
+              className="glass px-4 py-2 text-sm font-light text-white/50 hover:text-white/80 transition-colors"
+            >
+              登录
+            </button>
+          )}
+        </div>
+
+        <div className="text-center space-y-6 -mt-10">
+          <h1 className="text-6xl md:text-7xl font-light tracking-wider text-white/90">
+            SangYu
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg text-white/40 font-light tracking-widest">
+            欢迎来到我的主页
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="mt-16 grid gap-5 sm:grid-cols-3 w-full max-w-2xl">
+          <Link href="/resources" className="glass px-6 py-8 text-center">
+            <span className="text-2xl">📦</span>
+            <h3 className="mt-3 text-lg font-light text-white/90">资源库</h3>
+            <p className="mt-1 text-sm text-white/50">分类展示可下载资源</p>
+          </Link>
+
+          <Link href="/blog" className="glass px-6 py-8 text-center">
+            <span className="text-2xl">✍️</span>
+            <h3 className="mt-3 text-lg font-light text-white/90">文档</h3>
+            <p className="mt-1 text-sm text-white/50">技术笔记与思考</p>
+          </Link>
+
+          <Link href="/about" className="glass px-6 py-8 text-center">
+            <span className="text-2xl">🌸</span>
+            <h3 className="mt-3 text-lg font-light text-white/90">关于我</h3>
+            <p className="mt-1 text-sm text-white/50">个人介绍与联系</p>
+          </Link>
         </div>
-      </main>
-    </div>
+      </div>
+
+      <LoginPanel
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onRegister={() => { setLoginOpen(false); setRegisterOpen(true); }}
+      />
+      <RegisterPanel
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        onBackToLogin={() => { setRegisterOpen(false); setLoginOpen(true); }}
+      />
+    </>
   );
+}
+
+export default function Home() {
+  return <HomeContent />;
 }
