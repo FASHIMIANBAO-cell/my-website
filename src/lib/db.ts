@@ -156,7 +156,7 @@ export const comment = {
     if (resourceId === null) q += ` WHERE c."resourceId" IS NULL`;
     else if (resourceId !== undefined) q += ` WHERE c."resourceId" = ${resourceId}`;
     q += ` ORDER BY c."createdAt" ASC LIMIT 200`;
-    const r = await s.unsafe(q);
+    const r = await pool.query(q);
     return r.rows as CommentRow[];
   },
   create: async (userId: number, content: string, parentId?: number | null, resourceId?: number | null) => {
