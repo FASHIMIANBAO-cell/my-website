@@ -27,8 +27,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!data.loggedIn) { router.push("/"); return; }
       setUser(data);
-      const favRes = await fetch("/api/user/favorites");
-      if (favRes.ok) setFavorites(await favRes.json());
+      if (data.favorites) setFavorites(data.favorites);
       setLoading(false);
     }
     load();

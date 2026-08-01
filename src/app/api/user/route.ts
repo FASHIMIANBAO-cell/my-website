@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { user, admin } from "@/lib/db";
+import { user, admin, favorite } from "@/lib/db";
 
 export async function GET() {
   const session = await getSession();
@@ -9,11 +9,13 @@ export async function GET() {
   }
   const u = await user.findUnique({ username: session.username });
   const a = await admin.findUnique({ username: session.username });
+  const favs = u ? await favorite.findByUser(u.id) : [];
   return NextResponse.json({
     loggedIn: true,
     username: u?.username || session.username,
     displayName: u?.displayName || session.username,
     avatar: u?.avatar || "",
     isAdmin: !!a,
+    favorites: favs,
   });
 }
