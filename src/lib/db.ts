@@ -1,7 +1,10 @@
 import Database from "better-sqlite3";
 import path from "path";
+import { mkdirSync } from "fs";
 
-const dbPath = path.join(process.cwd(), "prisma", "dev.db");
+const dbDir = path.join(process.cwd(), "prisma");
+mkdirSync(dbDir, { recursive: true });
+const dbPath = path.join(dbDir, "dev.db");
 const sqlite = new Database(dbPath);
 sqlite.pragma("journal_mode = WAL");
 sqlite.pragma("foreign_keys = ON");
