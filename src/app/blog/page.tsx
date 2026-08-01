@@ -4,7 +4,6 @@ import { BlogCard } from "@/components/blog-card";
 export default async function BlogPage() {
   const posts = await post.findMany({
     where: { published: true },
-    orderBy: { createdAt: "desc" },
   });
 
   return (
