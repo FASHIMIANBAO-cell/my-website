@@ -1,31 +1,25 @@
 import { Pool } from "pg";
 
-// 懒加载连接池
-let _pool: Pool | null = null;
+// 全局连接池
+const _pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: { rejectUnauthorized: false },
+  max: 3,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
 
-function pool() {
-  if (!_pool) {
-    _pool = new Pool({
-      connectionString: process.env.POSTGRES_URL,
-      ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
-    });
-  }
-  return _pool;
-}
-
-// 执行带参数的查询
+// 执行查询
 async function q(text: string, params?: any[]) {
-  const client = await pool().connect();
-  try {
-    const r = await client.query(text, params);
-    return r;
-  } finally {
-    client.release();
-  }
+  return _pool.query(text, params);
 }
 
-// 初始化表
+let _inited = false;
+
+// 初始化表（只执行一次）
 async function initDB() {
+  if (_inited) return;
+  _inited = true;
   await q(`CREATE TABLE IF NOT EXISTS Admin (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, password TEXT NOT NULL)`);
   await q(`CREATE TABLE IF NOT EXISTS "User" (id SERIAL PRIMARY KEY, username TEXT UNIQUE NOT NULL, "displayName" TEXT NOT NULL DEFAULT '', email TEXT NOT NULL DEFAULT '', password TEXT NOT NULL, avatar TEXT NOT NULL DEFAULT '', "createdAt" TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS Post (id SERIAL PRIMARY KEY, slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL DEFAULT '', excerpt TEXT NOT NULL DEFAULT '', published INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMP DEFAULT NOW(), "updatedAt" TIMESTAMP DEFAULT NOW())`);
