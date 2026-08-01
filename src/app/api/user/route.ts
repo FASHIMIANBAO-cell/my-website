@@ -7,8 +7,8 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ loggedIn: false, isAdmin: false });
   }
-  const u = user.findUnique({ username: session.username });
-  const a = admin.findUnique({ username: session.username });
+  const u = await user.findUnique({ username: session.username });
+  const a = await admin.findUnique({ username: session.username });
   return NextResponse.json({
     loggedIn: true,
     username: u?.username || session.username,

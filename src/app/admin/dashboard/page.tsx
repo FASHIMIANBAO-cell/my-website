@@ -8,8 +8,8 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/admin");
 
-  const postCount = post.findMany().length;
-  const resourceCount = resource.findMany().length;
+  const postCount = (await post.findMany()).length;
+  const resourceCount = (await resource.findMany()).length;
 
   return (
     <div>

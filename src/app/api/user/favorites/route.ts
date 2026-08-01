@@ -7,10 +7,10 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "未登录" }, { status: 401 });
 
-  const u = user.findUnique({ username: session.username });
+  const u = await user.findUnique({ username: session.username });
   if (!u) return NextResponse.json({ error: "用户不存在" }, { status: 401 });
 
-  const favs = favorite.findByUser(u.id);
+  const favs = await favorite.findByUser(u.id);
   return NextResponse.json(favs);
 }
 
@@ -19,11 +19,11 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "未登录" }, { status: 401 });
 
-  const u = user.findUnique({ username: session.username });
+  const u = await user.findUnique({ username: session.username });
   if (!u) return NextResponse.json({ error: "用户不存在" }, { status: 401 });
 
   const { postId } = await request.json();
-  favorite.add(u.id, postId);
+  await favorite.add(u.id, postId);
   return NextResponse.json({ ok: true });
 }
 
@@ -32,10 +32,10 @@ export async function DELETE(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "未登录" }, { status: 401 });
 
-  const u = user.findUnique({ username: session.username });
+  const u = await user.findUnique({ username: session.username });
   if (!u) return NextResponse.json({ error: "用户不存在" }, { status: 401 });
 
   const { postId } = await request.json();
-  favorite.remove(u.id, postId);
+  await favorite.remove(u.id, postId);
   return NextResponse.json({ ok: true });
 }

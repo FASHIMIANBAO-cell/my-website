@@ -8,7 +8,7 @@ export default async function ResourceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const r = resource.findUnique({ id: parseInt(id) });
+  const r = await resource.findUnique({ id: parseInt(id) });
   if (!r) notFound();
 
   const links = JSON.parse(r.downloadLinks || "[]") as {
@@ -17,7 +17,7 @@ export default async function ResourceDetailPage({
     code?: string;
   }[];
 
-  resource.incrementDownloads(r.id);
+  await resource.incrementDownloads(r.id);
 
   return (
     <ResourceDetailClient

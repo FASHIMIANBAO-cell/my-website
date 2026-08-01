@@ -8,7 +8,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const postData = post.findUnique({ slug });
+  const postData = await post.findUnique({ slug });
   if (!postData) notFound();
 
   return (

@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "未登录" }, { status: 401 });
 
-  const u = user.findUnique({ username: session.username });
+  const u = await user.findUnique({ username: session.username });
   if (!u) return NextResponse.json({ error: "用户不存在" }, { status: 401 });
 
   const formData = await request.formData();
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   await writeFile(path.join(uploadsDir, filename), buffer);
 
   const avatarPath = `/uploads/${filename}`;
-  user.updateAvatar(session.username, avatarPath);
+  await user.updateAvatar(session.username, avatarPath);
 
   return NextResponse.json({ ok: true, avatar: avatarPath });
 }

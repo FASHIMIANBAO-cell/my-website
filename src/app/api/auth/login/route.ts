@@ -5,12 +5,12 @@ import { verifyPassword, createToken, hashPassword } from "@/lib/auth";
 export async function POST(request: Request) {
   const { username, password } = await request.json();
 
-  const existingAdmin = admin.findUnique({ username });
+  const existingAdmin = await admin.findUnique({ username });
 
   // 首次运行时自动创建管理员账号
   if (!existingAdmin) {
     const hashed = await hashPassword(password);
-    admin.create({ username, password: hashed });
+    await admin.create({ username, password: hashed });
 
     const token = await createToken(username);
     const response = NextResponse.json({ ok: true });

@@ -12,7 +12,7 @@ export async function PUT(
   }
   const { id } = await params;
   const data = await request.json();
-  const result = post.update({ id: parseInt(id) }, data);
+  const result = await post.update(parseInt(id), data);
   return NextResponse.json(result);
 }
 
@@ -25,6 +25,6 @@ export async function DELETE(
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const { id } = await params;
-  post.delete({ id: parseInt(id) });
+  await post.delete({ id: parseInt(id) });
   return NextResponse.json({ ok: true });
 }

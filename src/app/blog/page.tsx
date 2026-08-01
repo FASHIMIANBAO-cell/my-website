@@ -2,7 +2,7 @@ import { post } from "@/lib/db";
 import { BlogCard } from "@/components/blog-card";
 
 export default async function BlogPage() {
-  const posts = post.findMany({
+  const posts = await post.findMany({
     where: { published: true },
     orderBy: { createdAt: "desc" },
   });

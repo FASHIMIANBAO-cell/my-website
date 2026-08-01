@@ -16,12 +16,12 @@ export async function POST(request: Request) {
     if (password.length < 8 || /[\u4e00-\u9fff]/.test(password)) {
       return NextResponse.json({ error: "密码需至少8位，不能包含汉字" }, { status: 400 });
     }
-    const existing = user.findUnique({ username });
+    const existing = await user.findUnique({ username });
     if (existing) {
       return NextResponse.json({ error: "账号已被注册" }, { status: 409 });
     }
     const hashed = await hashPassword(password);
-    user.create({ username, displayName: displayName || username, password: hashed });
+    await user.create({ username, displayName: displayName || username, password: hashed });
 
     const token = await createToken(username);
     const response = NextResponse.json({ ok: true, username, isAdmin: false });
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     let displayName = username;
     let isAdmin = false;
 
-    const existingUser = user.findUnique({ username });
+    const existingUser = await user.findUnique({ username });
     if (existingUser) {
       const valid = await verifyPassword(password, existingUser.password);
       if (!valid) {
@@ -49,14 +49,14 @@ export async function POST(request: Request) {
       displayName = existingUser.displayName || username;
     } else {
       // 检查是否是管理员
-      const existingAdmin = admin.findUnique({ username });
+      const existingAdmin = await admin.findUnique({ username });
       if (existingAdmin) {
         const valid = await verifyPassword(password, existingAdmin.password);
         if (!valid) {
           return NextResponse.json({ error: "密码错误" }, { status: 401 });
         }
         // 自动创建对应的用户记录
-        user.create({ username, displayName: username, password: existingAdmin.password });
+        await user.create({ username, displayName: username, password: existingAdmin.password });
         isAdmin = true;
       } else {
         return NextResponse.json({ error: "账号不存在" }, { status: 401 });
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
     // 额外检查管理员表
     if (!isAdmin) {
-      const a = admin.findUnique({ username });
+      const a = await admin.findUnique({ username });
       isAdmin = !!a;
     }
 

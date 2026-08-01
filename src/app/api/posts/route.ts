@@ -7,7 +7,7 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
-  const posts = post.findMany({ orderBy: { createdAt: "desc" } });
+  const posts = await post.findMany();
   return NextResponse.json(posts);
 }
 
@@ -17,6 +17,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
   const data = await request.json();
-  const result = post.create(data);
+  const result = await post.create(data);
   return NextResponse.json(result, { status: 201 });
 }
