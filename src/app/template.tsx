@@ -17,7 +17,7 @@ function TemplateInner({ children }: { children: ReactNode }) {
       {!isHome && !isAdminPage && (
         <Link
           href="/"
-          className="fixed top-24 left-[15%] z-30 glass px-4 py-2 text-sm font-light text-white/50 hover:text-white/80 transition-colors"
+          className="fixed top-6 left-4 md:left-6 z-30 glass px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-light text-white/50 hover:text-white/80 transition-colors"
         >
           ← 首页
         </Link>
