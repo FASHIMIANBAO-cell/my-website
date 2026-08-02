@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { user } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { put } from "@vercel/blob";
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -15,18 +14,12 @@ export async function POST(request: Request) {
   const file = formData.get("avatar") as File | null;
   if (!file) return NextResponse.json({ error: "没有文件" }, { status: 400 });
 
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-
-  // 生成唯一文件名
   const ext = file.name.split(".").pop() || "png";
-  const filename = `avatar-${u.id}-${Date.now()}.${ext}`;
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadsDir, { recursive: true });
-  await writeFile(path.join(uploadsDir, filename), buffer);
+  const blob = await put(`avatars/${u.id}-${Date.now()}.${ext}`, file, {
+    access: "public",
+  });
 
-  const avatarPath = `/uploads/${filename}`;
-  await user.updateAvatar(session.username, avatarPath);
+  await user.updateAvatar(session.username, blob.url);
 
-  return NextResponse.json({ ok: true, avatar: avatarPath });
+  return NextResponse.json({ ok: true, avatar: blob.url });
 }
