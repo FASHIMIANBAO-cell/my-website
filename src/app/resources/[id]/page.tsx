@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { resource } from "@/lib/db";
 import { ResourceDetailClient } from "./detail-client";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ResourceDetailPage({
   params,
