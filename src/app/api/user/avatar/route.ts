@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   const ext = file.name.split(".").pop() || "png";
   const blob = await put(`avatars/${u.id}-${Date.now()}.${ext}`, file, {
     access: "public",
+    addRandomSuffix: false,
   });
 
   await user.updateAvatar(session.username, blob.url);
